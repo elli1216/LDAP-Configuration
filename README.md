@@ -1,5 +1,4 @@
-
-# OpenLDAP Configuration — Ubuntu Server & Client Setup
+# OpenLDAP Configuration
 
 This guide documents the installation and configuration of an **OpenLDAP server** on **Ubuntu Server** and its integration with an **Ubuntu Client** for centralized authentication.
 
@@ -16,7 +15,7 @@ This guide documents the installation and configuration of an **OpenLDAP server*
 
 Before proceeding with this LDAP configuration guide, please ensure you have completed the server and client setup:
 
-**[Linux Ubuntu Commands Repository](https://github.com/elli1216/linux-ubuntu-commands)**
+**[Linux Ubuntu Server and Client Setup](https://github.com/elli1216/ubuntu-server-and-client-setup)**
 
 This repository contains essential Ubuntu server and client setup commands that must be completed before configuring LDAP.
 
@@ -240,9 +239,10 @@ sudo nano /etc/nsswitch.conf
 <strong>Edit the following lines to include <code>ldap</code>:</strong>
 
 ```text
-passwd:         files systemd ldap
-group:          files systemd ldap
-shadow:         files ldap
+passwd:         files systemd sss ldap
+group:          files systemd sss ldap
+shadow:         files systemd sss ldap
+gshadow:        files systemd ldap
 ```
 
 </div>
@@ -277,7 +277,6 @@ session optional pam_mkhomedir.so skel=/etc/skel/ umask=0022
 
 ```bash
 sudo systemctl restart nscd
-sudo systemctl restart nslcd
 ```
 
 </div>
