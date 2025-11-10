@@ -1,22 +1,22 @@
 
-# 🧩 OpenLDAP Configuration — Ubuntu Server & Client Setup
+# OpenLDAP Configuration — Ubuntu Server & Client Setup
 
 This guide documents the installation and configuration of an **OpenLDAP server** on **Ubuntu Server** and its integration with an **Ubuntu Client** for centralized authentication.
 
 ---
 
-## 📋 Prerequisites
+## Prerequisites
 
 <div align="center">
 
 <details>
-<summary><b>⚠️ Important: Complete Prerequisites First</b></summary>
+<summary><b>Important: Complete Prerequisites First</b></summary>
 
 <br>
 
 Before proceeding with this LDAP configuration guide, please ensure you have completed the server and client setup:
 
-👉 **[Linux Ubuntu Commands Repository](https://github.com/elli1216/linux-ubuntu-commands)**
+**[Linux Ubuntu Commands Repository](https://github.com/elli1216/linux-ubuntu-commands)**
 
 This repository contains essential Ubuntu server and client setup commands that must be completed before configuring LDAP.
 
@@ -26,7 +26,7 @@ This repository contains essential Ubuntu server and client setup commands that 
 
 ---
 
-## 🖥️ Overview
+## Overview
 
 <div align="left">
 
@@ -44,7 +44,7 @@ This setup includes:
 
 ---
 
-## ⚙️ Server Configuration (Ubuntu Server)
+## Server Configuration (Ubuntu Server)
 
 ### **1. Install OpenLDAP**
 
@@ -57,7 +57,7 @@ sudo apt install slapd ldap-utils -y
 </div>
 
 <blockquote>
-💡 <strong>What this does:</strong> Installs the <strong>LDAP server (slapd)</strong> and essential <strong>LDAP utilities</strong>.
+<strong>What this does:</strong> Installs the <strong>LDAP server (slapd)</strong> and essential <strong>LDAP utilities</strong>.
 </blockquote>
 
 ---
@@ -129,7 +129,7 @@ slappasswd
 ```
 
 <blockquote>
-📝 <strong>Example output:</strong>
+<strong>Example output:</strong>
 <pre><code>{SSHA}9BRR7nK3W8cGd3i6R1Npz+12Hg4bZ5L/</code></pre>
 </blockquote>
 
@@ -177,12 +177,12 @@ sudo ufw allow 389/tcp
 </div>
 
 <blockquote>
-🔓 <strong>Purpose:</strong> Allows LDAP traffic through <strong>port 389</strong> for client connections.
+<strong>Purpose:</strong> Allows LDAP traffic through <strong>port 389</strong> for client connections.
 </blockquote>
 
 ---
 
-## 💻 Client Configuration (Ubuntu Client)
+## Client Configuration (Ubuntu Client)
 
 ### **1. Install LDAP Client Packages**
 
@@ -195,7 +195,7 @@ sudo apt install libnss-ldap libpam-ldap ldap-utils nscd -y
 </div>
 
 <blockquote>
-💡 <strong>What this does:</strong> Installs necessary modules for <strong>NSS</strong> and <strong>PAM</strong> to support LDAP authentication.
+<strong>What this does:</strong> Installs necessary modules for <strong>NSS</strong> and <strong>PAM</strong> to support LDAP authentication.
 </blockquote>
 
 ---
@@ -224,7 +224,7 @@ sudo apt install libnss-ldap libpam-ldap ldap-utils nscd -y
 </div>
 
 <blockquote>
-🔗 <strong>Purpose:</strong> Links the client to the server's directory service.
+<strong>Purpose:</strong> Links the client to the server's directory service.
 </blockquote>
 
 ---
@@ -266,7 +266,7 @@ session optional pam_mkhomedir.so skel=/etc/skel/ umask=0022
 </div>
 
 <blockquote>
-🏠 <strong>Purpose:</strong> Ensures LDAP users get a home folder (e.g., <code>/home/lee1user</code>) upon first login.
+<strong>Purpose:</strong> Ensures LDAP users get a home folder (e.g., <code>/home/lee1user</code>) upon first login.
 </blockquote>
 
 ---
@@ -283,12 +283,12 @@ sudo systemctl restart nslcd
 </div>
 
 <blockquote>
-🔄 <strong>Purpose:</strong> Applies the new configurations.
+<strong>Purpose:</strong> Applies the new configurations.
 </blockquote>
 
 ---
 
-## 🌐 Network & Internet Access Configuration
+## Network & Internet Access Configuration
 
 ### **Routing Setup (on the Server)**
 
@@ -309,7 +309,7 @@ sudo iptables -t nat -A POSTROUTING -s 10.10.10.0/24 -o enp0s3 -j MASQUERADE
 </div>
 
 <blockquote>
-🌐 <strong>Purpose:</strong> Allows internal clients (<code>10.10.10.0/24</code>) to access the internet through the server's external interface.
+<strong>Purpose:</strong> Allows internal clients (<code>10.10.10.0/24</code>) to access the internet through the server's external interface.
 </blockquote>
 
 ---
@@ -335,7 +335,7 @@ nameserver 10.10.10.1
 </div>
 
 <blockquote>
-🔍 <strong>Purpose:</strong> Ensures the client uses the server for DNS resolution.
+<strong>Purpose:</strong> Ensures the client uses the server for DNS resolution.
 </blockquote>
 
 ---
@@ -360,7 +360,7 @@ server=8.8.8.8
 
 ---
 
-## ✅ Verification
+## Verification
 
 <div align="left">
 
@@ -371,7 +371,7 @@ getent passwd lee1user
 ```
 
 <blockquote>
-✅ <strong>Expected output:</strong>
+<strong>Expected output:</strong>
 <pre><code>lee1user:x:10000:10000:Lee One:/home/lee1user:/bin/bash</code></pre>
 </blockquote>
 
@@ -383,7 +383,7 @@ You should now be able to log in as <code>lee1user</code> on the client.
 
 ---
 
-## 📘 Summary
+## Summary
 
 <div align="center">
 
@@ -414,7 +414,7 @@ You should now be able to log in as <code>lee1user</code> on the client.
 
 ---
 
-## 🧾 Notes
+## Notes
 
 <div align="left">
 
@@ -430,7 +430,7 @@ You should now be able to log in as <code>lee1user</code> on the client.
 
 ---
 
-## 🧠 References
+## References
 
 <div align="left">
 
@@ -446,10 +446,7 @@ You should now be able to log in as <code>lee1user</code> on the client.
 
 <div align="center">
 
-<hr>
-
-<strong>Author:</strong> <em>Darell Floresca</em><br>
-<strong>Project:</strong> Linux Server & Client — LDAP Configuration<br>
-<strong>License:</strong> MIT
+<strong>Author:</strong> <em>Darl Ellison Floresca</em><br>
+<strong>Project:</strong> LDAP Configuration<br>
 
 </div>
