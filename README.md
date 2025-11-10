@@ -382,6 +382,144 @@ You should now be able to log in as <code>lee1user</code> on the client.
 
 ---
 
+## phpLDAPadmin Installation and Configuration
+
+phpLDAPadmin is an extremely useful tool because it lets you manage your LDAP users, groups, and permissions using a simple web interface instead of complicated `.ldif` files and command-line tools.
+
+Since your server is already routing traffic (we fixed that networking issue!), this setup should go smoothly.
+
+Here is the step-by-step process to install and configure phpLDAPadmin on your **Ubuntu Server VM** and access it from your **Ubuntu Client VM**.
+
+---
+
+### **1. Install phpLDAPadmin and Apache Web Server**
+
+You will run these commands on your **Ubuntu Server VM** using SSH.
+
+<div align="left">
+
+```bash
+# On the SERVER VM:
+
+# 1. Install phpLDAPadmin. This also installs the Apache web server and PHP dependencies.
+sudo apt install phpldapadmin -y
+
+# 2. Check the Apache web server status. It should be running immediately.
+sudo systemctl status apache2
+
+# 3. Open the firewall for HTTP traffic (port 80)
+# This allows your client's web browser to access the interface.
+sudo ufw allow 80/tcp
+```
+
+</div>
+
+---
+
+### **2. Configure phpLDAPadmin for Your Domain**
+
+We need to tell the web interface your LDAP domain name (`dar1.lan`).
+
+<div align="left">
+
+```bash
+# On the SERVER VM:
+
+# Open the main configuration file for phpLDAPadmin
+sudo nano /etc/phpldapadmin/config.php
+```
+
+</div>
+
+You need to find the configuration section that defines the host and base domain.
+
+1. Find the lines that start with `$servers->setValue('server','host',...`
+2. Find the lines that start with `$servers->setValue('server','base',...`
+
+Modify those lines to reflect your environment (using `10.10.10.1` and `dar1.lan`):
+
+```php
+// Old (default) line:
+// $servers->setValue('server','host','127.0.0.1');
+
+// New line: Change the host to your static IP address:
+$servers->setValue('server','host','10.10.10.1');
+
+
+// Old (default) line:
+// $servers->setValue('server','base',array('dc=example,dc=com'));
+
+// New line: Change the base to your domain components (dc=dar1,dc=lan):
+$servers->setValue('server','base',array('dc=dar1,dc=lan'));
+```
+
+Save and exit `nano` (`Ctrl+O`, `Enter`, `Ctrl+X`).
+
+---
+
+### **3. Allow Client Access (Disable Security)**
+
+By default, Apache is set to only allow connections from the local host (`127.0.0.1`) to the phpLDAPadmin interface. We need to tell it to allow connections from your entire internal network (`10.10.10.0/24`).
+
+<div align="left">
+
+```bash
+# On the SERVER VM:
+
+# Open the Apache configuration file for phpldapadmin
+sudo nano /etc/apache2/conf-available/phpldapadmin.conf
+```
+
+</div>
+
+Find the following block of code (it should be near the top). It starts with `<Directory /usr/share/phpldapadmin>`.
+
+Add the Require all granted line right after AllowOverride None so the block looks exactly like this:
+
+```
+<Directory /usr/share/phpldapadmin/htdocs/>
+    DirectoryIndex index.php
+    Options +FollowSymLinks
+    AllowOverride None
+    Require all granted  <-- ADD THIS LINE HERE
+```
+
+Save and exit `nano`.
+
+---
+
+### **4. Restart Apache and Access the GUI**
+
+<div align="left">
+
+```bash
+# On the SERVER VM:
+
+# Restart the web server to apply the changes
+sudo systemctl restart apache2
+```
+
+</div>
+
+### **Demonstration (On the Ubuntu Client VM)**
+
+1. **On your Ubuntu Client VM**, open the web browser (e.g., Firefox).
+
+2. In the address bar, type the following URL (using your server's static IP):
+
+   `http://10.10.10.1/phpldapadmin`
+
+3. The phpLDAPadmin interface should now load.
+
+4. On the left, click **"login"**.
+
+   - **Login DN:** `cn=admin,dc=dar1,dc=lan`
+   - **Password:** The administrator password you set during the initial `slapd` setup.
+
+You will now be logged in and can see your `ou=People` and `ou=Groups` containers, and manage your user accounts like `lee1user` through the graphical interface.
+
+---
+
 ## Summary
 
 <div align="center">
