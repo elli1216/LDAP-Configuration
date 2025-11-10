@@ -1,0 +1,301 @@
+
+# 🧩 OpenLDAP Configuration — Ubuntu Server & Client Setup
+
+This guide documents the installation and configuration of an **OpenLDAP server** on **Ubuntu Server** and its integration with an **Ubuntu Client** for centralized authentication.
+
+---
+
+## 🖥️ Overview
+
+OpenLDAP (Lightweight Directory Access Protocol) allows centralized management of users, groups, and authentication across multiple systems.  
+This setup includes:
+
+- **Ubuntu Server** as the LDAP server
+- **Ubuntu Client** configured to authenticate via the LDAP server
+- **Networking & DNS/NAT configuration** for client connectivity
+
+---
+
+## ⚙️ Server Configuration (Ubuntu Server)
+
+### **1. Install OpenLDAP**
+```bash
+sudo apt install slapd ldap-utils -y
+````
+
+Installs the **LDAP server (slapd)** and essential **LDAP utilities**.
+
+---
+
+### **2. Configure LDAP Server**
+
+```bash
+sudo dpkg-reconfigure slapd
+```
+
+**During setup:**
+
+* Define the **Base DN**, e.g. `dc=dar1,dc=lan`
+* Set the **Admin password**
+* Skip database removal prompts if upgrading
+
+---
+
+### **3. Create Organizational Units**
+
+Create a new file:
+
+```bash
+nano base.ldif
+```
+
+**Example content:**
+
+```ldif
+dn: ou=People,dc=dar1,dc=lan
+objectClass: organizationalUnit
+ou: People
+
+dn: ou=Groups,dc=dar1,dc=lan
+objectClass: organizationalUnit
+ou: Groups
+```
+
+Add the base structure to LDAP:
+
+```bash
+sudo ldapadd -x -D cn=admin,dc=dar1,dc=lan -W -f base.ldif
+```
+
+---
+
+### **4. Create a User**
+
+Generate a hashed password:
+
+```bash
+slappasswd
+```
+
+Example output:
+
+```
+{SSHA}9BRR7nK3W8cGd3i6R1Npz+12Hg4bZ5L/
+```
+
+Then create the user definition:
+
+```bash
+nano user.ldif
+```
+
+**Example content:**
+
+```ldif
+dn: uid=lee1user,ou=People,dc=dar1,dc=lan
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+cn: Lee One
+sn: User
+uid: lee1user
+uidNumber: 10000
+gidNumber: 10000
+homeDirectory: /home/lee1user
+loginShell: /bin/bash
+userPassword: {SSHA}9BRR7nK3W8cGd3i6R1Npz+12Hg4bZ5L/
+```
+
+Add the user:
+
+```bash
+sudo ldapadd -x -D cn=admin,dc=dar1,dc=lan -W -f user.ldif
+```
+
+---
+
+### **5. Open Firewall Port**
+
+```bash
+sudo ufw allow 389/tcp
+```
+
+Allows LDAP traffic through **port 389** for client connections.
+
+---
+
+## 💻 Client Configuration (Ubuntu Client)
+
+### **1. Install LDAP Client Packages**
+
+```bash
+sudo apt install libnss-ldap libpam-ldap ldap-utils nscd -y
+```
+
+This installs necessary modules for **NSS** and **PAM** to support LDAP authentication.
+
+---
+
+### **2. Configure LDAP Connection**
+
+When prompted:
+
+* **URI:** `ldap://10.10.10.1/`
+* **Base DN:** `dc=dar1,dc=lan`
+
+This links the client to the server’s directory service.
+
+---
+
+### **3. Update NSS Configuration**
+
+```bash
+sudo nano /etc/nsswitch.conf
+```
+
+Edit the following lines to include `ldap`:
+
+```text
+passwd:         files systemd ldap
+group:          files systemd ldap
+shadow:         files ldap
+```
+
+---
+
+### **4. Enable Auto Home Directory Creation**
+
+```bash
+sudo nano /etc/pam.d/common-session
+```
+
+Add this line at the bottom:
+
+```text
+session optional pam_mkhomedir.so skel=/etc/skel/ umask=0022
+```
+
+Ensures LDAP users get a home folder (e.g., `/home/lee1user`) upon first login.
+
+---
+
+### **5. Restart LDAP Services**
+
+```bash
+sudo systemctl restart nscd
+sudo systemctl restart nslcd
+```
+
+Applies the new configurations.
+
+---
+
+## 🌐 Network & Internet Access Configuration
+
+### **Routing Setup (on the Server)**
+
+Enable IP forwarding:
+
+```bash
+sudo sysctl -p
+```
+
+Add a NAT rule for internet sharing:
+
+```bash
+sudo iptables -t nat -A POSTROUTING -s 10.10.10.0/24 -o enp0s3 -j MASQUERADE
+```
+
+This allows internal clients (`10.10.10.0/24`) to access the internet through the server’s external interface.
+
+---
+
+### **Client DNS Fix**
+
+If the client can’t resolve domains, fix DNS:
+
+```bash
+sudo systemctl stop systemd-resolved
+sudo rm /etc/resolv.conf
+sudo nano /etc/resolv.conf
+```
+
+Add:
+
+```text
+nameserver 10.10.10.1
+```
+
+This ensures the client uses the server for DNS resolution.
+
+---
+
+### **Server DNS Forwarding**
+
+Tell the DNS service (`dnsmasq`) where to forward external requests:
+
+```bash
+sudo nano /etc/dnsmasq.conf
+```
+
+Add:
+
+```text
+server=8.8.8.8
+```
+
+---
+
+## ✅ Verification
+
+### On the **Client**, test LDAP lookup:
+
+```bash
+getent passwd lee1user
+```
+
+Expected output:
+
+```
+lee1user:x:10000:10000:Lee One:/home/lee1user:/bin/bash
+```
+
+### Test login:
+
+You should now be able to log in as `lee1user` on the client.
+
+---
+
+## 📘 Summary
+
+| Role        | System        | Key Tasks                                                                                |
+| ----------- | ------------- | ---------------------------------------------------------------------------------------- |
+| **Server**  | Ubuntu Server | Install & configure slapd, create base OUs, add user entries, open firewall              |
+| **Client**  | Ubuntu Client | Install libnss/pam modules, configure NSS & PAM, link to LDAP, enable home auto-creation |
+| **Network** | Both          | Configure NAT, IP forwarding, and DNS for proper connectivity                            |
+
+---
+
+## 🧾 Notes
+
+* Base DN used in this guide: **`dc=dar1,dc=lan`**
+* Example user: **lee1user**
+* LDAP Port: **389 (TCP)**
+* Verify all IPs match your network setup.
+* Restart services after each major configuration step.
+
+---
+
+## 🧠 References
+
+* [Ubuntu OpenLDAP Server Guide](https://ubuntu.com/server/docs/service-ldap)
+* [Debian LDAP Client Configuration](https://wiki.debian.org/LDAP/PAM)
+* [Linux UFW Firewall Documentation](https://help.ubuntu.com/community/UFW)
+
+---
+
+**Author:** *Darell Floresca*
+**Project:** Linux Server & Client — LDAP Configuration
+**License:** MIT
+
+```
