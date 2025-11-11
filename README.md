@@ -419,6 +419,61 @@ server=8.8.8.8
 
 ---
 
+### **Set Up `nslcd` (Step-by-Step) on the Client VM**
+
+<div align="left">
+
+<strong>Step 1:</strong> Install the <code>nslcd</code> Package
+
+This was the step we just completed. We had to fix the client's internet access first, then kill the <code>apt</code> lock.
+
+```bash
+# On the CLIENT VM
+sudo apt install nslcd
+```
+
+<strong>Step 2:</strong> Run the Interactive Configuration Wizard
+
+As soon as <code>nslcd</code> finished installing, a purple "Package configuration" screen appeared. This wizard automatically creates the configuration file for <code>nslcd</code> (which is located at <code>/etc/nslcd.conf</code>).
+
+We gave it this information:
+
+<ol>
+  <li><strong>LDAP server URI:</strong> <code>ldap://10.10.10.1/</code></li>
+  <li><strong>LDAP search base:</strong> <code>dc=dar1,dc=lan</code></li>
+  <li><strong>LDAP version:</strong> <code>3</code></li>
+  <li><strong>LDAP root account:</strong> <code>cn=admin,dc=dar1,dc=lan</code></li>
+  <li><strong>LDAP root password:</strong> <code>(Your-LDAP-Admin-Password)</code></li>
+</ol>
+
+<strong>Step 3:</strong> Restart All Client Services
+
+This is the final step in the <code>ldap_client_setup.md</code> guide. To make sure all services (including <code>nslcd</code>) are working together, we restart them.
+
+```bash
+# On the CLIENT VM
+sudo systemctl restart nslcd
+sudo systemctl restart nscd
+```
+
+</div>
+
+<blockquote>
+<strong>Purpose:</strong> <code>nslcd</code> is now installed, configured with your server's details, and running.
+
+You can <strong>verify it's working</strong> with this command:
+
+```bash
+# On the CLIENT VM
+sudo systemctl status nslcd
+```
+
+It should now show <code>active (running)</code> in green.
+
+</blockquote>
+
+---
+
 ## Verification
 
 <div align="left">
