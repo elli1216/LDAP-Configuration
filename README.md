@@ -305,10 +305,70 @@ sudo sysctl -p
 sudo iptables -t nat -A POSTROUTING -s 10.10.10.0/24 -o enp0s3 -j MASQUERADE
 ```
 
+<strong>Step 3:</strong> Save iptables rules persistently:
+
+```bash
+sudo sh -c "iptables-save > /etc/iptables/rules.v4"
+```
+
+<blockquote>
+<strong>Purpose:</strong> Manually saved all the new rules to the persistent file.
+</blockquote>
+
+<strong>Step 4:</strong> Fix Server's Own DNS:
+
+```bash
+sudo nano /etc/resolv.conf
+```
+
+<strong>Add the following line:</strong>
+
+```text
+nameserver 8.8.8.8
+```
+
+<blockquote>
+<strong>Purpose:</strong> Opened the server's DNS config. We added <code>nameserver 8.8.8.8</code> so the server itself could find public domains.
+</blockquote>
+
+<strong>Step 5:</strong> Fix dnsmasq Forwarding:
+
+```bash
+sudo nano /etc/dnsmasq.conf
+```
+
+<strong>Add the following line:</strong>
+
+```text
+server=8.8.8.8
+```
+
+<blockquote>
+<strong>Purpose:</strong> Edited the <code>dnsmasq</code> config to fix "Temporary failure" errors. We added <code>server=8.8.8.8</code> to force <code>dnsmasq</code> to use Google for public lookups.
+</blockquote>
+
+<strong>Step 6:</strong> Apply Configs:
+
+```bash
+sudo systemctl restart dnsmasq
+```
+
+<blockquote>
+<strong>Purpose:</strong> Restarted <code>dnsmasq</code> to apply the new <code>server=8.8.8.8</code> rule.
+</blockquote>
+
+```bash
+sudo reboot
+```
+
+<blockquote>
+<strong>Purpose:</strong> A full server reboot was needed to correctly load all rules (<code>ip_forward</code> and <code>iptables</code>).
+</blockquote>
+
 </div>
 
 <blockquote>
-<strong>Purpose:</strong> Allows internal clients (<code>10.10.10.0/24</code>) to access the internet through the server's external interface.
+<strong>Overall Purpose:</strong> Allows internal clients (<code>10.10.10.0/24</code>) to access the internet through the server's external interface.
 </blockquote>
 
 ---
